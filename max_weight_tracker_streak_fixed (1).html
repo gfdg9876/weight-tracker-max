@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Трекер веса</title>
+
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root{
+  --bg:#f4f6fb;
+  --card:rgba(255,255,255,.86);
+  --solid:#fff;
+  --text:#131722;
+  --muted:#7b8498;
+  --line:rgba(20,25,40,.09);
+  --accent:#6757f5;
+  --accent2:#4b96ff;
+  --soft:rgba(103,87,245,.10);
+  --grid:rgba(20,25,40,.09);
+  --shadow:0 18px 50px rgba(33,39,75,.10);
+}
+html[data-theme="dark"]{
+  --bg:#080a10;
+  --card:rgba(18,21,30,.84);
+  --solid:#11151e;
+  --text:#f5f7ff;
+  --muted:#9299aa;
+  --line:rgba(255,255,255,.085);
+  --accent:#8a7cff;
+  --accent2:#56a0ff;
+  --soft:rgba(138,124,255,.14);
+  --grid:rgba(255,255,255,.085);
+  --shadow:0 22px 65px rgba(0,0,0,.32);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text)}
+body{
+  min-height:100vh;
+  padding:15px 12px 32px;
+  background:
+    radial-gradient(circle at 4% 0%,rgba(103,87,245,.14),transparent 28%),
+    radial-gradient(circle at 98% 15%,rgba(75,150,255,.11),transparent 24%),
+    var(--bg);
+  transition:background .3s ease,color .3s ease;
+}
+button,input{font:inherit}
+button{border:0;cursor:pointer;color:inherit}
+button:disabled{cursor:not-allowed}
+.app{width:min(100%,560px);margin:0 auto}
+
+.top{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin:2px 2px 15px;
+}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.logo{
+  width:44px;height:44px;flex:none;border-radius:15px;
+  display:grid;place-items:center;color:#fff;font-size:21px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 12px 28px rgba(103,87,245,.28);
+  animation:logoFloat 3s ease-in-out infinite;
+}
+.brand h1{margin:0;font-size:18px;line-height:1.05;font-weight:800;letter-spacing:-.4px}
+.brand .sub{margin-top:4px;color:var(--muted);font-size:10px;font-weight:500}
+.top-actions{display:flex;gap:7px;flex:none}
+.iconbtn,.theme-toggle{
+  width:41px;height:41px;border-radius:14px;
+  display:grid;place-items:center;
+  background:var(--card);border:1px solid var(--line);
+  box-shadow:0 8px 22px rgba(0,0,0,.05);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  transition:transform .18s ease,box-shadow .18s ease;
+}
+.iconbtn:hover,.theme-toggle:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.10)}
+.theme-icon{font-size:17px}
+
+.card{
+  border:1px solid var(--line);
+  background:var(--card);
+  border-radius:23px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  margin-bottom:12px;
+}
+.hero{
+  position:relative;overflow:hidden;
+  padding:22px;
+  color:#fff;
+  background:linear-gradient(135deg,#5f4fee 0%,#7568ff 48%,#4d94ff 100%);
+  border:0;
+  box-shadow:0 22px 55px rgba(91,76,225,.25);
+}
+.hero:before,.hero:after{
+  content:"";position:absolute;border-radius:50%;pointer-events:none;
+  background:rgba(255,255,255,.10);
+}
+.hero:before{width:190px;height:190px;right:-80px;top:-100px}
+.hero:after{width:145px;height:145px;left:-88px;bottom:-105px;background:rgba(255,255,255,.07)}
+.label{
+  position:relative;z-index:1;
+  font-size:10px;letter-spacing:1.35px;font-weight:800;opacity:.78;
+}
+.current{
+  position:relative;z-index:1;
+  margin-top:6px;font-size:46px;line-height:1.02;
+  font-weight:800;letter-spacing:-2.2px;word-break:break-word;
+}
+.goaltext{
+  position:relative;z-index:1;
+  margin-top:7px;font-size:11px;font-weight:600;opacity:.80;
+}
+.progress{
+  position:relative;z-index:1;
+  height:10px;margin-top:19px;
+  border-radius:99px;overflow:hidden;background:rgba(255,255,255,.19);
+}
+#bar{
+  height:100%;width:0;border-radius:99px;background:#fff;
+  box-shadow:0 0 20px rgba(255,255,255,.55);
+  transition:width .85s cubic-bezier(.2,.8,.2,1);
+  position:relative;
+}
+#bar:after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.70),transparent);
+  transform:translateX(-100%);animation:shine 2.2s linear infinite;
+}
+.stats{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:8px;margin-top:14px;
+}
+.stats .stat{
+  min-height:70px;padding:11px 10px;border-radius:16px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;flex-direction:column;justify-content:center;
+}
+.stats .stat b{font-size:17px;line-height:1.1}
+.stats .stat span{margin-top:4px;font-size:9px;opacity:.72}
+
+.cardtitle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:17px 18px 13px;
+  font-size:14px;font-weight:800;letter-spacing:-.15px;
+}
+.chartbox{
+  position:relative;height:245px;margin:0 10px 12px;
+  border-radius:17px;overflow:hidden;
+  background:linear-gradient(180deg,var(--soft),transparent 72%);
+}
+#chart{display:block;width:100%;height:100%;touch-action:none}
+.chart-empty{
+  position:absolute;inset:0;
+  display:grid;place-content:center;text-align:center;
+  color:var(--muted);font-size:11px;line-height:1.6;
+  pointer-events:none;
+}
+.actions{display:grid;grid-template-columns:1.35fr .8fr;gap:9px;padding:10px}
+.btn{
+  height:52px;border-radius:17px;font-size:12px;font-weight:800;
+  transition:transform .18s ease,box-shadow .18s ease,opacity .18s ease;
+}
+.btn:active{transform:translateY(1px)}
+.primary{
+  color:#fff;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 12px 28px rgba(103,87,245,.23);
+}
+.primary:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(103,87,245,.30)}
+.secondary{
+  background:var(--solid);
+  border:1px solid var(--line);
+  box-shadow:0 7px 18px rgba(0,0,0,.04);
+}
+.secondary:hover{transform:translateY(-2px);background:var(--soft);border-color:rgba(103,87,245,.22)}
+.actions .btn:disabled{opacity:.52;transform:none;box-shadow:none}
+
+.history{padding:0 10px 11px;display:flex;flex-direction:column;gap:7px}
+.history .row{
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:54px;padding:10px 13px;
+  border-radius:15px;background:rgba(127,127,127,.05);
+  border:1px solid var(--line);
+}
+.history .weight{font-size:13px;font-weight:800}
+.history .date{margin-top:3px;color:var(--muted);font-size:10px;font-weight:500}
+.empty{
+  min-height:110px;
+  display:grid;place-items:center;
+  text-align:center;color:var(--muted);font-size:11px;
+  padding:20px;
+}
+.empty:before{
+  content:"○";display:block;margin:0 auto 6px;
+  width:34px;height:34px;line-height:31px;
+  border-radius:12px;background:var(--soft);color:var(--accent);
+  font-size:21px;
+}
+
+.modal{
+  position:fixed;inset:0;z-index:5000;
+  display:none;align-items:flex-end;justify-content:center;
+  background:rgba(4,6,13,.48);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+}
+.modal.show{display:flex;animation:fadeIn .18s ease}
+.sheet{
+  width:min(560px,100%);
+  padding:9px 18px 22px;
+  border-radius:27px 27px 0 0;
+  background:var(--solid);
+  border:1px solid var(--line);
+  box-shadow:0 -20px 65px rgba(0,0,0,.20);
+  animation:sheetUp .30s cubic-bezier(.2,.8,.2,1);
+}
+.sheet:before{
+  content:"";display:block;width:42px;height:4px;margin:1px auto 17px;
+  border-radius:99px;background:var(--line);
+}
+.sheet h2{margin:0 0 5px;font-size:19px;letter-spacing:-.35px}
+.sheet .field{margin-top:13px}
+.field label{
+  display:block;margin:0 0 7px;
+  color:var(--muted);font-size:10px;font-weight:700;
+}
+.field input{
+  width:100%;height:51px;padding:0 14px;
+  color:var(--text);background:var(--bg);
+  border:1px solid var(--line);border-radius:15px;
+  outline:none;font-size:14px;font-weight:600;
+}
+.field input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px var(--soft);
+}
+.modal-actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:9px;
+  margin-top:17px;
+}
+.modal-actions .btn{height:49px}
+
+.toast{
+  position:fixed;left:50%;bottom:20px;z-index:10000;
+  transform:translate(-50%,18px);
+  padding:10px 14px;border-radius:14px;
+  background:var(--text);color:var(--solid);
+  font-size:11px;font-weight:700;
+  opacity:0;pointer-events:none;
+  box-shadow:0 12px 34px rgba(0,0,0,.22);
+  transition:opacity .22s ease,transform .22s ease;
+}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@keyframes logoFloat{50%{transform:translateY(-3px) rotate(1deg)}}
+@keyframes shine{100%{transform:translateX(100%)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes drawLine{to{stroke-dashoffset:0}}
+@keyframes pointIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:scale(1)}}
+
+@media (max-width:390px){
+  body{padding:11px 9px 28px}
+  .brand h1{font-size:16px}
+  .logo{width:40px;height:40px}
+  .current{font-size:40px}
+  .hero{padding:19px}
+  .chartbox{height:220px;margin-left:7px;margin-right:7px}
+  .cardtitle{padding-left:15px;padding-right:15px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation:none!important;transition:none!important}
+}
+
+.streak-card{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:16px 18px;border-radius:22px;background:linear-gradient(135deg,rgba(255,145,50,.16),rgba(255,210,80,.10));border:1px solid rgba(255,145,50,.20)}
+.streak-left{display:flex;align-items:center;gap:12px}.streak-fire{font-size:34px;filter:drop-shadow(0 5px 10px rgba(255,130,30,.25))}.streak-title{font-weight:800;font-size:16px}.streak-sub{font-size:12px;color:var(--muted);margin-top:3px}.streak-count{font-size:25px;font-weight:900;white-space:nowrap}.notify-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0}.switch{width:48px;height:28px;border:0;border-radius:20px;background:#c8ceda;position:relative;padding:0;cursor:pointer}.switch:after{content:"";position:absolute;width:22px;height:22px;top:3px;left:3px;border-radius:50%;background:#fff;transition:.2s}.switch.on{background:var(--accent)}.switch.on:after{left:23px}.settings-note{font-size:12px;color:var(--muted);line-height:1.45}
+@media(max-width:420px){.streak-card{padding:14px}.streak-count{font-size:22px}.streak-fire{font-size:30px}}
+</style>
+
+
+<style>
+
+/* MOBILE / MAX WEBVIEW OPTIMIZATION */
+html,body{
+  width:100%;
+  overflow-x:hidden;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  font-synthesis:none;
+  font-kerning:normal;
+  font-stretch:normal;
+}
+body{
+  padding-top:max(12px, env(safe-area-inset-top));
+  padding-left:max(10px, env(safe-area-inset-left));
+  padding-right:max(10px, env(safe-area-inset-right));
+  padding-bottom:max(28px, env(safe-area-inset-bottom));
+}
+.app{width:100%;max-width:520px;margin:0 auto}
+.current{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif;
+  font-size:clamp(38px,11vw,46px);
+  letter-spacing:-1.1px;
+  line-height:1.02;
+  font-stretch:normal;
+  font-variant-numeric:tabular-nums lining-nums;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.goaltext,.stats .stat b,.stats .stat span,.history .weight,.history .date,
+.btn,.label,.chart-empty,.field label,.toast{
+  font-variant-numeric:tabular-nums;
+}
+.hero{padding:20px clamp(16px,5vw,22px)}
+.stats{gap:7px}
+.stats .stat{min-width:0;padding:10px 8px}
+.stats .stat b{font-size:clamp(15px,4.3vw,17px);white-space:nowrap}
+.stats .stat span{font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chartbox{height:clamp(205px,58vw,245px);margin-left:7px;margin-right:7px}
+#chart{width:100%;height:100%;}
+.cardtitle{padding-left:15px;padding-right:15px;font-size:15px}
+.actions{grid-template-columns:minmax(0,1.25fr) minmax(0,.85fr);gap:8px;padding:8px}
+.btn{min-width:0;padding:0 8px;font-size:clamp(11px,3.2vw,12px);white-space:normal;line-height:1.15}
+.history{padding-left:8px;padding-right:8px}
+
+@media (max-width:430px){
+  body{padding-left:8px;padding-right:8px}
+  .top{margin-left:1px;margin-right:1px;gap:8px}
+  .brand{gap:9px}
+  .brand h1{font-size:15px}
+  .brand .sub{font-size:9px}
+  .logo{width:39px;height:39px;border-radius:13px;font-size:18px}
+  .iconbtn,.theme-toggle{width:39px;height:39px;border-radius:13px}
+  .hero{border-radius:21px;padding:18px 16px}
+  .current{font-size:40px;letter-spacing:-.8px}
+  .goaltext{font-size:10px}
+  .progress{margin-top:16px;height:9px}
+  .stats{margin-top:12px;gap:6px}
+  .stats .stat{min-height:64px;border-radius:14px;padding:9px 7px}
+  .stats .stat b{font-size:15px}
+  .stats .stat span{font-size:8px}
+  .chartbox{height:220px;margin-bottom:9px}
+  .cardtitle{padding-top:15px;padding-bottom:11px;font-size:14px}
+  .actions{gap:7px;padding:8px}
+  .btn{height:50px;border-radius:15px;font-size:11px}
+}
+
+@media (max-width:360px){
+  .current{font-size:36px}
+  .stats .stat b{font-size:14px}
+  .stats .stat span{font-size:7.5px}
+  .btn{font-size:10px}
+}
+
+
+.goal-win-overlay{position:fixed;inset:0;z-index:10000;display:none;place-items:center;padding:24px;background:rgba(10,10,25,.38);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.goal-win-overlay.show{display:grid;animation:goalFade .35s ease-out}
+.goal-win-card{width:min(92vw,420px);padding:28px 24px;border-radius:28px;background:linear-gradient(145deg,#ffffff,#f4f2ff);color:#171923;text-align:center;box-shadow:0 24px 80px rgba(35,25,100,.28);animation:goalPop .55s cubic-bezier(.16,1,.3,1)}
+.goal-win-icon{font-size:58px;line-height:1;margin-bottom:10px;animation:goalBounce 1s ease-in-out infinite}
+.goal-win-title{font-size:27px;font-weight:900;margin:0 0 8px}.goal-win-text{font-size:14px;color:#697080;line-height:1.45;margin:0 0 20px}.goal-win-btn{border:0;border-radius:15px;padding:13px 22px;font-weight:800;color:#fff;background:linear-gradient(135deg,#6757e8,#8b7cf6);cursor:pointer}
+@keyframes goalFade{from{opacity:0}to{opacity:1}}
+@keyframes goalPop{from{opacity:0;transform:translateY(18px) scale(.88)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes goalBounce{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
+.streak-fire.active{animation:firePulse .7s ease-in-out 3}
+@keyframes firePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35) rotate(-5deg)}}
+</style>
+</head>
+
+<script>
+try {
+  if (localStorage.getItem("weightTrackerFreshStart_v1") !== "done") {
+    localStorage.removeItem("max_weight_tracker_v3");
+    localStorage.setItem("weightTrackerFreshStart_v1", "done");
+  }
+} catch(e) {}
+
+setInterval(()=>{renderStreak();
+  if(notifySettings.enabled && "Notification" in window && Notification.permission==="granted"){
+    const now=new Date(); const hh=String(now.getHours()).padStart(2,"0"), mm=String(now.getMinutes()).padStart(2,"0");
+    const key=dateKey(now.toISOString())+" "+notifySettings.time;
+    if(hh+":"+mm===notifySettings.time && localStorage.getItem("max_notify_sent")!==key){
+      new Notification("Трекер",{body:"Загляни в приложение и отметь свой день ✨"}); localStorage.setItem("max_notify_sent",key);
+    }
+  }
+},60000);
+</script>
+
+<body><div id="celebrationLayer"></div>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">⚖</div>
+      <div><h1>Трекер веса</h1><div class="sub">Достигай цели каждый день</div></div>
+    </div>
+    <div class="top-actions">
+      <button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Переключить тему">
+        <span class="theme-icon" id="themeIcon">☀️</span>
+      </button>
+      <button class="iconbtn" onclick="openNotifications()" aria-label="Напоминания">🔔</button>
+      <button class="iconbtn" onclick="openGoal()">⚙️</button>
+    </div>
+  </header>
+
+  <section class="card hero">
+    <div class="label">ТЕКУЩИЙ ВЕС</div>
+    <div class="current" id="current">—</div>
+    <div class="goaltext" id="goalText">Сначала задай цель</div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="stats">
+      <div class="stat"><b id="percent">0%</b><span>выполнено</span></div>
+      <div class="stat"><b id="left">—</b><span>до цели</span></div>
+      <div class="stat"><b id="count">0</b><span>измерений</span></div>
+    </div>
+  </section>
+
+  <section class="streak-card">
+    <div class="streak-left"><div class="streak-fire" id="streakFire">🔥</div><div><div class="streak-title">Серия активности</div><div class="streak-sub" id="streakSub">Отмечай дни в трекере</div></div></div>
+    <div class="streak-count" id="streakCount">0 дней</div>
+  </section>
+
+  <section class="card">
+    <div class="cardtitle">Динамика веса</div>
+    <div class="chartbox">
+      <svg id="chart" viewBox="0 0 600 300" preserveAspectRatio="none"></svg>
+      <div class="chart-empty" id="chartEmpty">Добавь первое измерение,<br>и появится линия прогресса.</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="actions">
+      <button class="btn primary" id="weightButton" onclick="openWeight()">＋ Записать вес</button>
+      <button class="btn secondary" onclick="openGoal()">⚙️ Цель</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="cardtitle">История измерений</div>
+    <div class="history" id="history"></div>
+  </section>
+</div>
+
+<div class="modal" id="goalModal">
+  <div class="sheet">
+    <h2>🎯 Цель веса</h2>
+    <div class="field"><label>Начальный вес, кг</label><input id="start" type="number" min="1" max="500" step="0.1" placeholder="Например, 80"></div>
+    <div class="field"><label>Целевой вес, кг</label><input id="target" type="number" min="1" max="500" step="0.1" placeholder="Например, 70"></div>
+    <div class="modal-actions">
+      <button class="btn primary" onclick="saveGoal()">Сохранить</button>
+      <button class="btn secondary" onclick="closeModals()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="weightModal">
+  <div class="sheet">
+    <h2>⚖️ Сегодняшний вес</h2>
+    <div class="field"><label>Вес, кг</label><input id="weight" type="number" min="1" max="500" step="0.1" placeholder="Например, 78.4"></div>
+    <div class="modal-actions">
+      <button class="btn primary" onclick="saveWeight()">Сохранить</button>
+      <button class="btn secondary" onclick="closeModals()">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="notifyModal">
+  <div class="sheet">
+    <h2>🔔 Напоминания</h2>
+    <div class="notify-row"><div><b>Напоминания</b><div class="settings-note">Напоминание вернуться в трекер и отметить день. Оно не требует ежедневного взвешивания.</div></div><button class="switch" id="notifySwitch" onclick="toggleNotifications()" aria-label="Включить напоминания"></button></div>
+    <div class="field"><label>Время напоминания</label><input id="notifyTime" type="time" value="20:00"></div>
+    <div class="modal-actions"><button class="btn primary" onclick="saveNotificationSettings()">Сохранить</button><button class="btn secondary" onclick="closeModals()">Закрыть</button></div>
+  </div>
+</div>
+<div class="goal-win-overlay" id="goalWinOverlay" role="dialog" aria-modal="true">
+  <div class="goal-win-card">
+    <div class="goal-win-icon">🎉</div>
+    <h2 class="goal-win-title">Целевой показатель достигнут!</h2>
+    <p class="goal-win-text">Ты дошёл до заданного значения. Можно сохранить результат и продолжить наблюдать за самочувствием и измерениями.</p>
+    <button class="goal-win-btn" onclick="closeGoalWin()">Продолжить</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY="max_weight_tracker_v3";
+let data={start:null,target:null,measurements:[]};
+
+try{
+  const saved=JSON.parse(localStorage.getItem(KEY)||"null");
+  if(saved && Array.isArray(saved.measurements)) data=saved;
+}catch(e){}
+
+const $=id=>document.getElementById(id);
+const fmt=n=>Number(n).toFixed(1)+" кг";
+
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(data));}
+  catch(e){toast("Не удалось сохранить данные");}
+}
+
+const NOTIFY_KEY="max_weight_tracker_notifications_v1";
+let notifySettings={enabled:false,time:"20:00"};
+try{notifySettings=Object.assign(notifySettings,JSON.parse(localStorage.getItem(NOTIFY_KEY)||"{}"));}catch(e){}
+
+function saveNotify(){try{localStorage.setItem(NOTIFY_KEY,JSON.stringify(notifySettings));}catch(e){}}
+function openNotifications(){
+  $("notifyModal").classList.add("show");
+  $("notifyTime").value=notifySettings.time||"20:00";
+  $("notifySwitch").classList.toggle("on",!!notifySettings.enabled);
+}
+function toggleNotifications(){
+  if(!notifySettings.enabled && "Notification" in window){
+    Notification.requestPermission().then(p=>{
+      if(p!=="granted") toast("Разрешение на уведомления не выдано");
+      notifySettings.enabled=p==="granted";
+      $("notifySwitch").classList.toggle("on",notifySettings.enabled);
+    });
+  }else{
+    notifySettings.enabled=!notifySettings.enabled;
+    $("notifySwitch").classList.toggle("on",notifySettings.enabled);
+  }
+}
+function saveNotificationSettings(){
+  notifySettings.time=$("notifyTime").value||"20:00";
+  saveNotify(); closeModals(); toast(notifySettings.enabled?"Напоминания включены 🔔":"Напоминания выключены");
+}
+function activityDates(){
+  return [...new Set((data.measurements||[]).map(m=>{
+    if(m.timestamp) return dateKey(m.timestamp);
+    if(m.date) return String(m.date).slice(0,10);
+    return null;
+  }).filter(Boolean))].sort();
+}
+function calcStreak(){
+  const dates=activityDates();
+  if(!dates.length)return 0;
+  const today=dateKey(new Date());
+  // Серия считается только если сегодня есть активность.
+  // Несколько записей в один день = один день серии.
+  if(!dates.includes(today))return 0;
+  let streak=0;
+  let cursor=new Date();
+  cursor.setHours(12,0,0,0);
+  while(dates.includes(dateKey(cursor))){
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  return streak;
+}
+function renderStreak(){
+  const n=calcStreak();
+  $("streakCount").textContent=n+(n===1?" день":" дней");
+  $("streakSub").textContent=n?"Серия активности продолжается":"Сделай первую запись";
+  const fire=$("streakFire");
+  if(fire) fire.classList.toggle("active",n>0);
+}
+
+// Миграция старых записей v2/v1 в новый формат с timestamp.
+(function migrateOldData(){
+  let changed=false;
+
+  data.measurements=(data.measurements||[]).map((m,i)=>{
+    if(m.timestamp){
+      return m;
+    }
+
+    if(m.date){
+      const timestamp=`${m.date}T12:00:00`;
+      changed=true;
+      return {
+        id:String(Date.now())+i,
+        timestamp,
+        weight:Number(m.weight)
+      };
+    }
+
+    return m;
+  }).filter(m=>valid(Number(m.weight)));
+
+  if(changed)save();
+})();
+
+// Первичная отрисовка серии после загрузки и миграции данных.
+setTimeout(()=>{ renderStreak(); }, 0);
+
+function nowISO(){
+  return new Date().toISOString();
+}
+
+function dateKey(iso){
+  const d=new Date(iso);
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const day=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
+function dateTimeText(iso){
+  const d=new Date(iso);
+  const dd=String(d.getDate()).padStart(2,"0");
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const yyyy=d.getFullYear();
+  const hh=String(d.getHours()).padStart(2,"0");
+  const min=String(d.getMinutes()).padStart(2,"0");
+  return `${dd}.${mm}.${yyyy} ${hh}:${min}`;
+}
+
+function dateText(iso){
+  const d=new Date(iso);
+  const dd=String(d.getDate()).padStart(2,"0");
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  return `${dd}.${mm}`;
+}
+function toast(t){
+  $("toast").textContent=t;$("toast").classList.add("show");
+  clearTimeout(window.__toast);window.__toast=setTimeout(()=>$("toast").classList.remove("show"),1800);
+}
+function openGoal(){
+  $("start").value=data.start??"";
+  $("target").value=data.target??"";
+  $("goalModal").classList.add("show");
+}
+function openWeight(){
+  if(data.start===null||data.target===null){
+    openGoal();
+    toast("Сначала задай цель");
+    return;
+  }
+
+$("weight").value="";
+  $("weightModal").classList.add("show");
+  setTimeout(()=>$("weight").focus(),100);
+}
+function closeModals(){document.querySelectorAll(".modal").forEach(x=>x.classList.remove("show"));}
+
+function valid(v){return Number.isFinite(v)&&v>0&&v<=500;}
+
+function saveGoal(){
+  const s=Number($("start").value), t=Number($("target").value);
+  if(!valid(s)||!valid(t)){toast("Введи корректные значения");return;}
+  data.start=s;data.target=t;data.startAt=nowISO();
+
+  // Старые измерения не удаляем при сохранении цели.
+  // Начальный вес хранится отдельно и не считается ежедневным измерением.
+  save();
+  closeModals();
+  render();
+  toast("Цель сохранена");
+}
+
+function launchCelebration(){
+  const layer=document.getElementById("celebrationLayer");
+  if(!layer)return;
+  layer.innerHTML='<div class="celebrate-flash"></div>';
+  const colors=["#ff4d6d","#7c5cff","#00c2ff","#20c997","#ffc107","#ff7a00","#e83e8c"];
+  for(let i=0;i<90;i++){
+    const el=document.createElement("span");
+    el.className="confetti-piece";
+    el.style.left=(6+Math.random()*88)+"%";
+    el.style.background=colors[i%colors.length];
+    el.style.setProperty("--sx",(Math.random()-.5)*100+"px");
+    el.style.setProperty("--ex",(Math.random()-.5)*560+"px");
+    el.style.setProperty("--ey",(55+Math.random()*55)*innerHeight/100+"px");
+    el.style.setProperty("--rot",(180+Math.random()*900)+"deg");
+    el.style.setProperty("--dur",(1.35+Math.random()*1.35)+"s");
+    el.style.setProperty("--delay",(Math.random()*.25)+"s");
+    layer.appendChild(el);
+  }
+  [["24%","38%","#ff4d6d"],["76%","34%","#7c5cff"],["50%","25%","#00c2ff"]].forEach(pos=>{
+    const fw=document.createElement("div");
+    fw.className="firework"; fw.style.left=pos[0]; fw.style.top=pos[1]; fw.style.color=pos[2];
+    for(let a=0;a<360;a+=30){
+      const ray=document.createElement("i");
+      ray.style.setProperty("--angle",a+"deg"); fw.appendChild(ray);
+    }
+    layer.appendChild(fw);
+  });
+  setTimeout(()=>layer.innerHTML="",3600);
+}
+
+function saveWeight(){
+  const previousWeight = data.measurements.length
+    ? Number(data.measurements[data.measurements.length-1].weight)
+    : (data.start === null ? null : Number(data.start));
+
+  const w=Number($("weight").value);
+  if(!valid(w)){
+    toast("Введи корректный вес");
+    return;
+  }
+
+  const stamp=nowISO();
+  const todayKey=dateKey(stamp);
+
+  // Лимит: только одно измерение за календарные сутки.
+  const alreadyToday=data.measurements.some(
+    x=>dateKey(x.timestamp)===todayKey
+  );
+
+  if(alreadyToday){
+    closeModals();
+    toast("✓ Вес за сегодня уже записан");
+    return;
+  }
+
+  data.measurements.push({
+    id: (globalThis.crypto && typeof globalThis.crypto.randomUUID==="function" ? globalThis.crypto.randomUUID() : String(Date.now()) + Math.random()),
+    timestamp: stamp,
+    weight: w
+  });
+
+  data.measurements.sort(
+    (a,b)=>new Date(a.timestamp)-new Date(b.timestamp)
+  );
+
+  const reachedGoal = data.target !== null && previousWeight !== null &&
+    Number(previousWeight) > Number(data.target) && Number(w) <= Number(data.target);
+
+  if(reachedGoal){
+    data.goalReachedAt=stamp;
+  }
+
+  save();
+  closeModals();
+  render();
+  renderStreak();
+  toast(reachedGoal ? "🎉 Целевой показатель достигнут" : "Вес сохранён");
+
+  if(reachedGoal){
+    launchCelebration();
+    setTimeout(()=>openGoalWin(),450);
+  } else if(previousWeight !== null && w < previousWeight){
+    launchCelebration();
+    const fire=$("streakFire");
+    if(fire){ fire.classList.remove("active"); void fire.offsetWidth; fire.classList.add("active"); }
+  }
+}
+
+function openGoalWin(){
+  const el=$("goalWinOverlay");
+  if(el)el.classList.add("show");
+}
+function closeGoalWin(){
+  const el=$("goalWinOverlay");
+  if(el)el.classList.remove("show");
+}
+
+function progress(current){
+  if(data.start===null||data.target===null||data.start===data.target)return 100;
+  return Math.max(0,Math.min(100,(data.start-current)/(data.start-data.target)*100));
+}
+
+function render(){
+  if(data.start===null||data.target===null){
+    $("current").textContent="—";$("goalText").textContent="Сначала задай цель";
+    $("percent").textContent="0%";$("left").textContent="—";$("count").textContent="0";
+    $("bar").style.width="0%";
+    renderHistory();
+    drawChart();
+    updateWeightButton();
+    renderStreak();
+    return;
+  }
+  const arr=data.measurements;
+  const current=arr.length?arr[arr.length-1].weight:data.start;
+  const p=progress(current);
+  $("current").textContent=fmt(current);
+  if($("current").animate){
+    $("current").animate(
+      [
+        {transform:"scale(.92)",opacity:.55},
+        {transform:"scale(1.04)",opacity:1},
+        {transform:"scale(1)",opacity:1}
+      ],
+      {duration:420,easing:"cubic-bezier(.2,.8,.2,1)"}
+    );
+  }
+  $("goalText").textContent=`Начало ${fmt(data.start)}  →  Цель ${fmt(data.target)}`;
+  $("percent").textContent=Math.round(p)+"%";
+  $("left").textContent=fmt(Math.abs(current-data.target));
+  $("count").textContent=arr.length;
+  $("bar").style.width=p+"%";
+  renderHistory();
+  drawChart();
+  updateWeightButton();
+  renderStreak();
+}
+
+function updateWeightButton(){
+  const btn=$("weightButton");
+  if(!btn)return;
+
+  if(data.start===null||data.target===null){
+    btn.textContent="＋ Записать вес";
+    btn.disabled=false;
+    return;
+  }
+  btn.disabled=false;
+  btn.textContent="＋ Записать вес";
+  btn.style.opacity="1";
+  btn.style.cursor="pointer";
+}
+
+function renderHistory(){
+  const h=$("history");
+
+  if(!data.measurements.length){
+    h.innerHTML='<div class="empty">Пока нет измерений</div>';
+    return;
+  }
+
+  h.innerHTML=data.measurements
+    .slice()
+    .reverse()
+    .map(x=>`
+      <div class="row">
+        <div>
+          <div class="weight">${fmt(x.weight)}</div>
+          <div class="date">${dateTimeText(x.timestamp)}</div>
+        </div>
+      </div>
+    `).join("");
+}
+function getChartPoints(){
+  const measurements=(data.measurements||[])
+    .slice()
+    .filter(m=>valid(Number(m.weight)) && m.timestamp)
+    .sort((a,b)=>new Date(a.timestamp)-new Date(b.timestamp));
+
+  const startTimestamp=data.startAt
+    || (measurements.length ? measurements[0].timestamp : nowISO());
+
+  return [
+    {timestamp:startTimestamp,weight:Number(data.start),initial:true},
+    ...measurements.map(x=>({
+      timestamp:x.timestamp,
+      weight:Number(x.weight),
+      initial:false
+    }))
+  ];
+}
+
+function drawChart(){
+  const svg=$("chart");
+
+  if(data.start===null||data.target===null){
+    svg.innerHTML="";
+    $("chartEmpty").style.display="grid";
+    return;
+  }
+
+  const arr=getChartPoints();
+
+  $("chartEmpty").style.display="none";
+
+  const W=600,H=300,L=48,R=18,T=22,B=42;
+
+  let vals=arr.map(x=>x.weight).concat([data.target,data.start]);
+  let min=Math.min(...vals);
+  let max=Math.max(...vals);
+  let range=max-min||2;
+
+  min-=range*.12;
+  max+=range*.12;
+
+  const x=i=>arr.length===1
+    ? W/2
+    : L+i*((W-L-R)/(arr.length-1));
+
+  const y=v=>T+(max-v)/(max-min)*(H-T-B);
+
+  let out="";
+
+  for(let i=0;i<5;i++){
+    const yy=T+i*(H-T-B)/4;
+    const vv=max-i*(max-min)/4;
+
+    out+=`
+      <line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}"
+            stroke="var(--grid)" stroke-width="1"/>
+      <text x="6" y="${yy+4}" font-size="12"
+            fill="var(--muted)">${vv.toFixed(1)}</text>
+    `;
+  }
+
+  const targetY=y(data.target);
+
+  out+=`
+    <line x1="${L}" y1="${targetY}" x2="${W-R}" y2="${targetY}"
+          stroke="#8a82ee" stroke-width="2" stroke-dasharray="7 6"/>
+    <text x="${W-R-4}" y="${targetY-7}" text-anchor="end"
+          font-size="12" fill="#6757e8">цель ${data.target.toFixed(1)}</text>
+  `;
+
+  // ЛИНИЯ ИДЁТ ЧЕРЕЗ КАЖДУЮ СОХРАНЁННУЮ ТОЧКУ.
+  if(arr.length>=2){
+    const points=arr.map((v,i)=>`${x(i)},${y(v.weight)}`).join(" ");
+
+    out+=`
+      <polyline
+        points="${points}"
+        fill="none"
+        stroke="#6757e8"
+        stroke-width="4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        style="stroke-dasharray:1000;stroke-dashoffset:1000;animation:drawLine 1.25s cubic-bezier(.2,.8,.2,1) forwards"
+      />
+    `;
+  }
+
+  arr.forEach((v,i)=>{
+    const cx=x(i);
+    const cy=y(v.weight);
+
+    // У каждой точки своя зона клика/наведения.
+    out+=`
+      <circle
+        cx="${cx}"
+        cy="${cy}"
+        r="17"
+        fill="transparent"
+        style="cursor:pointer"
+        data-point="${i}"
+        onmouseenter="showPointTooltip(${i})"
+        onmouseleave="hidePointTooltip()"
+        ontouchstart="showPointTooltip(${i})"
+      />
+    `;
+
+    out+=`
+      <circle
+        cx="${cx}"
+        cy="${cy}"
+        r="6"
+        fill="#fff"
+        stroke="#6757e8"
+        stroke-width="4"
+        pointer-events="none"
+        style="filter:drop-shadow(0 2px 5px #6757e855);animation:pointIn .45s cubic-bezier(.2,.8,.2,1) both"
+      />
+    `;
+
+    const showDate = arr.length <= 8 || i === 0 || i === arr.length-1 || i % Math.ceil(arr.length/6) === 0;
+    if(showDate){
+      out+=`
+        <text
+          x="${cx}"
+          y="${H-13}"
+          text-anchor="middle"
+          font-size="10"
+          fill="var(--muted)"
+        >${dateText(v.timestamp)}</text>
+      `;
+    }
+
+    if(i===0 || i===arr.length-1){
+      const labelY=Math.max(16,cy-12);
+
+      out+=`
+        <text
+          x="${cx}"
+          y="${labelY}"
+          text-anchor="middle"
+          font-size="12"
+          font-weight="700"
+          fill="#6757e8"
+          pointer-events="none"
+        >${v.weight.toFixed(1)} кг</text>
+      `;
+    }
+  });
+
+  // Всплывающая информация: дата + точное время + вес.
+  out+=`
+    <g id="pointTooltip" display="none" pointer-events="none">
+      <rect id="tooltipBg" x="0" y="0" width="190" height="64"
+            rx="10" fill="#171923"/>
+      <text id="tooltipTitle" x="12" y="20"
+            font-size="12" font-weight="700" fill="#fff"></text>
+      <text id="tooltipDate" x="12" y="39"
+            font-size="11" fill="#d9dbe3"></text>
+      <text id="tooltipWeight" x="12" y="55"
+            font-size="12" font-weight="700" fill="#fff"></text>
+    </g>
+  `;
+
+  svg.innerHTML=out;
+}
+
+function showPointTooltip(index){
+  const svg=$("chart");
+  const tip=svg.querySelector("#pointTooltip");
+  const bg=svg.querySelector("#tooltipBg");
+  const title=svg.querySelector("#tooltipTitle");
+  const dateEl=svg.querySelector("#tooltipDate");
+  const weightEl=svg.querySelector("#tooltipWeight");
+
+  if(!tip)return;
+
+  const arr=getChartPoints();
+  const p=arr[index];
+  if(!p)return;
+
+  title.textContent=p.initial ? "Начальный вес" : "Измерение";
+  dateEl.textContent=dateTimeText(p.timestamp);
+  weightEl.textContent=`Вес: ${p.weight.toFixed(1)} кг`;
+
+  const W=600,H=300,L=48,R=18,T=22,B=42;
+
+  let vals=arr.map(x=>x.weight).concat([data.target,data.start]);
+  let min=Math.min(...vals);
+  let max=Math.max(...vals);
+  let range=max-min||2;
+
+  min-=range*.12;
+  max+=range*.12;
+
+  const cx=arr.length===1
+    ? W/2
+    : L+index*((W-L-R)/(arr.length-1));
+
+  const cy=T+(max-p.weight)/(max-min)*(H-T-B);
+
+  let tx=cx+12;
+  let ty=cy-76;
+
+  if(tx+190>W)tx=cx-202;
+  if(tx<0)tx=4;
+  if(ty<4)ty=cy+14;
+
+  bg.setAttribute("x",tx);
+  bg.setAttribute("y",ty);
+
+  title.setAttribute("x",tx+12);
+  title.setAttribute("y",ty+20);
+
+  dateEl.setAttribute("x",tx+12);
+  dateEl.setAttribute("y",ty+39);
+
+  weightEl.setAttribute("x",tx+12);
+  weightEl.setAttribute("y",ty+55);
+
+  tip.setAttribute("display","block");
+}
+
+function hidePointTooltip(){
+  const tip=$("chart").querySelector("#pointTooltip");
+  if(tip)tip.setAttribute("display","none");
+}
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)closeModals();}));
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModals();});
+
+// ===== THEME =====
+function getSavedTheme(){
+  try{
+    return localStorage.getItem("weightTrackerTheme") || "light";
+  }catch(e){
+    return "light";
+  }
+}
+
+function applyTheme(theme){
+  const normalized=theme==="dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme",normalized);
+
+  const icon=$("themeIcon");
+  if(icon) icon.textContent=normalized==="dark" ? "🌙" : "☀️";
+
+  try{
+    localStorage.setItem("weightTrackerTheme",normalized);
+  }catch(e){}
+
+  // Перерисовываем график, чтобы сетка и подписи сразу приняли новую тему.
+  if(typeof drawChart==="function") drawChart();
+}
+
+function toggleTheme(){
+  const current=document.documentElement.getAttribute("data-theme") || "light";
+  applyTheme(current==="dark" ? "light" : "dark");
+}
+
+applyTheme(getSavedTheme());
+
+
+render();
+</script>
+</body>
+</html>
